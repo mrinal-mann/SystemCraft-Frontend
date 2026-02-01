@@ -103,6 +103,125 @@ export default function ProjectPage() {
     }
   };
 
+  const [expandedIds, setExpandedIds] = useState<number[]>([]);
+
+  const toggleExpanded = (id: number) => {
+    setExpandedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+    );
+  };
+
+  // Helper function to render text with **bold** formatting and bullet points
+  const formatText = (text: string) => {
+    if (!text) return null;
+
+    // Split by newlines to create bullet points if explicitly structured
+    const lines = text.split("\n").filter((line) => line.trim());
+
+    // Function to parse **bold** text within a string
+    const parseBoldText = (str: string) => {
+      const parts = str.split(/(\*\*[^*]+\*\*)/g);
+      return parts.map((part, index) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+          return (
+            <strong key={index} className="font-bold text-gray-100">
+              {part.slice(2, -2)}
+            </strong>
+          );
+        }
+        return part;
+      });
+    };
+
+    if (lines.length > 1) {
+      return (
+        <ul className="list-disc list-inside space-y-1.5 ml-1">
+          {lines.map((line, index) => {
+            const cleanLine = line.replace(/^[-•]\s*/, "").trim();
+            return (
+              <li key={index} className="text-sm text-gray-400 leading-relaxed">
+                {parseBoldText(cleanLine)}
+              </li>
+            );
+          })}
+        </ul>
+      );
+    }
+
+    return <span>{parseBoldText(text)}</span>;
+  };
+
+  // Improved parser for descriptions with embedded marked sections
+  const parseDescription = (desc: string) => {
+    const sections: {
+      general?: string;
+      whyItMatters?: string;
+      interviewAngle?: string;
+      productionAngle?: string;
+    } = {};
+
+    if (!desc) return sections;
+
+    const markers = [
+      {
+        key: "whyItMatters",
+        regex:
+          /(?:\*\*|__)?(?:Why It Matters|Importance)(?:\*\*|__)?[:：]?\s*/i,
+      },
+      {
+        key: "interviewAngle",
+        regex:
+          /(?:\*\*|__)?(?:Interview|Interview Angle|Interview Perspective)(?:\*\*|__)?[:：]?\s*/i,
+      },
+      {
+        key: "productionAngle",
+        regex:
+          /(?:\*\*|__)?(?:Production|Production Angle|Production Reality)(?:\*\*|__)?[:：]?\s*/i,
+      },
+    ];
+
+    const positions = markers
+      .map((m) => {
+        const match = desc.match(m.regex);
+        return {
+          key: m.key,
+          index: match ? match.index : -1,
+          length: match ? match[0].length : 0,
+        };
+      })
+      .filter((p) => p.index !== -1)
+      .sort((a, b) => (a.index as number) - (b.index as number));
+
+    if (positions.length === 0) {
+      sections.general = desc;
+      return sections;
+    }
+
+    if ((positions[0].index as number) > 0) {
+      sections.general = desc.substring(0, positions[0].index).trim();
+    }
+
+    positions.forEach((pos, i) => {
+      const start = (pos.index as number) + pos.length;
+      const end =
+        i < positions.length - 1
+          ? (positions[i + 1].index as number)
+          : desc.length;
+      const content = desc
+        .substring(start, end)
+        .trim()
+        .replace(/^(\*\*|__)/, "")
+        .replace(/^[:：]/, "")
+        .trim();
+
+      if (pos.key === "whyItMatters") sections.whyItMatters = content;
+      if (pos.key === "interviewAngle") sections.interviewAngle = content;
+      if (pos.key === "productionAngle") sections.productionAngle = content;
+    });
+
+    return sections;
+  };
+
   const getFilteredSuggestions = () => {
     if (!project?.suggestions) return [];
     if (statusFilter === "ALL") return project.suggestions;
@@ -321,117 +440,191 @@ export default function ProjectPage() {
                           </p>
                         </div>
                       ) : (
-                        getFilteredSuggestions().map((suggestion) => (
-                          <div
-                            key={suggestion.id}
-                            className={`bg-slate-800/40 rounded-2xl border border-white/5 overflow-hidden group transition-all duration-300 hover:border-white/10 ${
-                              suggestion.status === "ADDRESSED"
-                                ? "opacity-60"
-                                : ""
-                            } ${suggestion.status === "IGNORED" ? "opacity-30 grayscale" : ""}`}
-                          >
-                            <div className="flex h-full">
-                              <div
-                                className="w-1.5 shrink-0"
-                                style={{
-                                  backgroundColor:
-                                    suggestion.status === "ADDRESSED"
-                                      ? "#22C55E"
-                                      : suggestion.status === "IGNORED"
-                                        ? "#4B5563"
-                                        : suggestion.severity === "CRITICAL"
-                                          ? "#EF4444"
-                                          : suggestion.severity === "WARNING"
-                                            ? "#F59E0B"
-                                            : "#6366F1",
-                                }}
-                              />
-                              <div className="flex-1 p-6">
-                                <div className="flex items-start justify-between gap-6 mb-4">
-                                  <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                      <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.25em]">
-                                        {suggestion.category}
-                                      </span>
-                                      {suggestion.status === "ADDRESSED" && (
-                                        <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                        getFilteredSuggestions().map((suggestion) => {
+                          const sections = parseDescription(
+                            suggestion.description,
+                          );
+                          const isExpanded = expandedIds.includes(
+                            suggestion.id,
+                          );
+
+                          return (
+                            <div
+                              key={suggestion.id}
+                              className={`bg-slate-800/40 rounded-2xl border border-white/5 overflow-hidden group transition-all duration-300 hover:border-white/10 ${
+                                suggestion.status === "ADDRESSED"
+                                  ? "opacity-60"
+                                  : ""
+                              } ${suggestion.status === "IGNORED" ? "opacity-30 grayscale" : ""}`}
+                            >
+                              <div className="flex h-full">
+                                <div
+                                  className="w-1.5 shrink-0"
+                                  style={{
+                                    backgroundColor:
+                                      suggestion.status === "ADDRESSED"
+                                        ? "#22C55E"
+                                        : suggestion.status === "IGNORED"
+                                          ? "#4B5563"
+                                          : suggestion.severity === "CRITICAL"
+                                            ? "#EF4444"
+                                            : suggestion.severity === "WARNING"
+                                              ? "#F59E0B"
+                                              : "#6366F1",
+                                  }}
+                                />
+                                <div className="flex-1 p-6">
+                                  <div className="flex items-start justify-between gap-6 mb-4">
+                                    <div>
+                                      <div className="flex items-center gap-3 mb-2">
+                                        <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.25em]">
+                                          {suggestion.category}
+                                        </span>
+                                        {suggestion.status === "ADDRESSED" && (
+                                          <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                                        )}
+                                      </div>
+                                      <h4
+                                        className={`text-lg font-bold text-gray-100 tracking-tight ${suggestion.status === "ADDRESSED" ? "line-through text-gray-500" : ""}`}
+                                      >
+                                        {suggestion.title}
+                                      </h4>
+                                    </div>
+                                    <span
+                                      className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border ${
+                                        suggestion.status === "ADDRESSED"
+                                          ? "bg-green-500/10 text-green-400 border-green-500/20"
+                                          : suggestion.severity === "CRITICAL"
+                                            ? "bg-red-500/10 text-red-500 border-red-500/20 shadow-[0_0_12px_rgba(239,68,68,0.15)]"
+                                            : suggestion.severity === "WARNING"
+                                              ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                                              : "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                                      }`}
+                                    >
+                                      {suggestion.status === "ADDRESSED"
+                                        ? "Resolved"
+                                        : suggestion.severity}
+                                    </span>
+                                  </div>
+
+                                  <div className="text-sm text-gray-400 leading-relaxed mb-6 font-medium">
+                                    {formatText(
+                                      sections.general ||
+                                        suggestion.description,
+                                    )}
+                                  </div>
+
+                                  {isExpanded && (
+                                    <div className="mb-8 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                      {sections.whyItMatters && (
+                                        <div className="bg-blue-500/5 p-4 rounded-xl border border-blue-500/10">
+                                          <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">
+                                            Why It Matters
+                                          </p>
+                                          <div className="text-gray-300">
+                                            {formatText(sections.whyItMatters)}
+                                          </div>
+                                        </div>
+                                      )}
+                                      {sections.interviewAngle && (
+                                        <div className="bg-indigo-500/5 p-4 rounded-xl border border-indigo-500/10">
+                                          <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">
+                                            Interview Perspective
+                                          </p>
+                                          <div className="text-gray-300">
+                                            {formatText(
+                                              sections.interviewAngle,
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+                                      {sections.productionAngle && (
+                                        <div className="bg-amber-500/5 p-4 rounded-xl border border-amber-500/10">
+                                          <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-2">
+                                            Production Reality
+                                          </p>
+                                          <div className="text-gray-300">
+                                            {formatText(
+                                              sections.productionAngle,
+                                            )}
+                                          </div>
+                                        </div>
                                       )}
                                     </div>
-                                    <h4
-                                      className={`text-lg font-bold text-gray-100 tracking-tight ${suggestion.status === "ADDRESSED" ? "line-through text-gray-500" : ""}`}
-                                    >
-                                      {suggestion.title}
-                                    </h4>
+                                  )}
+
+                                  <div className="flex items-center justify-between pt-6 border-t border-white/5">
+                                    <div className="flex items-center gap-3">
+                                      {suggestion.status === "OPEN" && (
+                                        <>
+                                          <button
+                                            onClick={() =>
+                                              handleStatusChange(
+                                                suggestion.id,
+                                                "ADDRESSED",
+                                              )
+                                            }
+                                            disabled={
+                                              updatingId === suggestion.id
+                                            }
+                                            className="inline-flex items-center gap-2 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-green-400 bg-green-500/5 border border-green-500/10 rounded-xl hover:bg-green-500/10 transition-colors"
+                                          >
+                                            Mark Resolved
+                                          </button>
+                                          <button
+                                            onClick={() =>
+                                              handleStatusChange(
+                                                suggestion.id,
+                                                "IGNORED",
+                                              )
+                                            }
+                                            disabled={
+                                              updatingId === suggestion.id
+                                            }
+                                            className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-gray-600 bg-transparent border border-white/5 rounded-xl hover:bg-white/5 hover:text-gray-400 transition-colors"
+                                          >
+                                            Ignore
+                                          </button>
+                                        </>
+                                      )}
+                                      {suggestion.status !== "OPEN" && (
+                                        <button
+                                          onClick={() =>
+                                            handleStatusChange(
+                                              suggestion.id,
+                                              "OPEN",
+                                            )
+                                          }
+                                          disabled={
+                                            updatingId === suggestion.id
+                                          }
+                                          className="inline-flex items-center gap-2 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/5 border border-indigo-500/10 rounded-xl hover:bg-indigo-500/10 transition-colors"
+                                        >
+                                          Reopen Feedback
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    {(sections.whyItMatters ||
+                                      sections.interviewAngle ||
+                                      sections.productionAngle) && (
+                                      <button
+                                        onClick={() =>
+                                          toggleExpanded(suggestion.id)
+                                        }
+                                        className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-300 transition-colors"
+                                      >
+                                        {isExpanded
+                                          ? "Show Less"
+                                          : "Show Insights"}
+                                      </button>
+                                    )}
                                   </div>
-                                  <span
-                                    className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border ${
-                                      suggestion.status === "ADDRESSED"
-                                        ? "bg-green-500/10 text-green-400 border-green-500/20"
-                                        : suggestion.severity === "CRITICAL"
-                                          ? "bg-red-500/10 text-red-500 border-red-500/20 shadow-[0_0_12px_rgba(239,68,68,0.15)]"
-                                          : suggestion.severity === "WARNING"
-                                            ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                                            : "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
-                                    }`}
-                                  >
-                                    {suggestion.status === "ADDRESSED"
-                                      ? "Resolved"
-                                      : suggestion.severity}
-                                  </span>
-                                </div>
-
-                                <p className="text-sm text-gray-400 leading-relaxed mb-8 font-medium">
-                                  {suggestion.description}
-                                </p>
-
-                                <div className="flex items-center gap-3 pt-6 border-t border-white/5">
-                                  {suggestion.status === "OPEN" && (
-                                    <>
-                                      <button
-                                        onClick={() =>
-                                          handleStatusChange(
-                                            suggestion.id,
-                                            "ADDRESSED",
-                                          )
-                                        }
-                                        disabled={updatingId === suggestion.id}
-                                        className="inline-flex items-center gap-2 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-green-400 bg-green-500/5 border border-green-500/10 rounded-xl hover:bg-green-500/10 transition-colors"
-                                      >
-                                        Mark Resolved
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          handleStatusChange(
-                                            suggestion.id,
-                                            "IGNORED",
-                                          )
-                                        }
-                                        disabled={updatingId === suggestion.id}
-                                        className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-gray-600 bg-transparent border border-white/5 rounded-xl hover:bg-white/5 hover:text-gray-400 transition-colors"
-                                      >
-                                        Ignore
-                                      </button>
-                                    </>
-                                  )}
-                                  {suggestion.status !== "OPEN" && (
-                                    <button
-                                      onClick={() =>
-                                        handleStatusChange(
-                                          suggestion.id,
-                                          "OPEN",
-                                        )
-                                      }
-                                      disabled={updatingId === suggestion.id}
-                                      className="inline-flex items-center gap-2 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/5 border border-indigo-500/10 rounded-xl hover:bg-indigo-500/10 transition-colors"
-                                    >
-                                      Reopen Feedback
-                                    </button>
-                                  )}
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                     </div>
                   </div>

@@ -36,33 +36,117 @@ export function SuggestionCard({
 }: SuggestionCardProps) {
   const [expanded, setExpanded] = useState(false);
 
-  // Parse description sections if available
+  // Helper function to render text with **bold** formatting and bullet points
+  // Helper function to render text with **bold** formatting and bullet points
+  const formatText = (text: string) => {
+    if (!text) return null;
+
+    // Split by newlines to create bullet points if explicitly structured
+    const lines = text.split("\n").filter((line) => line.trim());
+
+    // Function to parse **bold** text within a string
+    const parseBoldText = (str: string) => {
+      const parts = str.split(/(\*\*[^*]+\*\*)/g);
+      return parts.map((part, index) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+          return (
+            <strong key={index} className="font-semibold text-[#111827]">
+              {part.slice(2, -2)}
+            </strong>
+          );
+        }
+        return part;
+      });
+    };
+
+    // If multiple lines, render as bullet points
+    if (lines.length > 1) {
+      return (
+        <ul className="list-disc list-inside space-y-1.5 ml-1">
+          {lines.map((line, index) => {
+            const cleanLine = line.replace(/^[-•]\s*/, "").trim();
+            return (
+              <li
+                key={index}
+                className="text-sm text-[#6B7280] leading-relaxed"
+              >
+                {parseBoldText(cleanLine)}
+              </li>
+            );
+          })}
+        </ul>
+      );
+    }
+
+    return <span>{parseBoldText(text)}</span>;
+  };
+
+  // Improved parser for descriptions with embedded marked sections
   const parseDescription = (desc: string) => {
     const sections: {
+      general?: string;
       whyItMatters?: string;
       interviewAngle?: string;
       productionAngle?: string;
-      general?: string;
     } = {};
 
-    // Try to find labeled sections
-    const whyMatch = desc.match(
-      /(?:why it matters|importance)[:：]?\s*(.+?)(?=(?:interview|production|$))/i,
-    );
-    const interviewMatch = desc.match(
-      /(?:interview|interview angle)[:：]?\s*(.+?)(?=(?:production|$))/i,
-    );
-    const productionMatch = desc.match(
-      /(?:production|production angle)[:：]?\s*(.+?)$/i,
-    );
+    if (!desc) return sections;
 
-    if (whyMatch || interviewMatch || productionMatch) {
-      sections.whyItMatters = whyMatch?.[1]?.trim();
-      sections.interviewAngle = interviewMatch?.[1]?.trim();
-      sections.productionAngle = productionMatch?.[1]?.trim();
-    } else {
+    // specific markers we look for (flexible with ** markers and case)
+    const markers = [
+      {
+        key: "whyItMatters",
+        regex:
+          /(?:\*\*|__)?(?:Why It Matters|Importance)(?:\*\*|__)?[:：]?\s*/i,
+      },
+      {
+        key: "interviewAngle",
+        regex:
+          /(?:\*\*|__)?(?:Interview|Interview Angle|Interview Perspective)(?:\*\*|__)?[:：]?\s*/i,
+      },
+      {
+        key: "productionAngle",
+        regex:
+          /(?:\*\*|__)?(?:Production|Production Angle|Production Reality)(?:\*\*|__)?[:：]?\s*/i,
+      },
+    ];
+
+    // Find the starting positions of all markers
+    const positions = markers
+      .map((m) => {
+        const match = desc.match(m.regex);
+        return {
+          key: m.key,
+          index: match ? match.index : -1,
+          length: match ? match[0].length : 0,
+        };
+      })
+      .filter((p) => p.index !== -1 && p.index !== undefined)
+      .sort((a, b) => (a.index as number) - (b.index as number));
+
+    if (positions.length === 0) {
       sections.general = desc;
+      return sections;
     }
+
+    // Extract General section (text before the first marker)
+    if ((positions[0].index as number) > 0) {
+      sections.general = desc.substring(0, positions[0].index).trim();
+    }
+
+    // Extract other sections
+    positions.forEach((pos, i) => {
+      const start = (pos.index as number) + pos.length;
+      const end =
+        i < positions.length - 1
+          ? (positions[i + 1].index as number)
+          : desc.length;
+      const content = desc.substring(start, end).trim();
+
+      if (pos.key === "whyItMatters") sections.whyItMatters = content;
+      if (pos.key === "interviewAngle") sections.interviewAngle = content;
+      if (pos.key === "productionAngle") sections.productionAngle = content;
+    });
 
     return sections;
   };
@@ -119,43 +203,43 @@ export function SuggestionCard({
 
         {/* Expanded Content */}
         {expanded && (
-          <div className="mt-4 pt-4 border-t border-[#E5E7EB] space-y-3">
+          <div className="mt-4 pt-4 border-t border-[#E5E7EB] space-y-4">
             {sections.general && (
-              <p className="text-sm text-[#6B7280] leading-relaxed whitespace-pre-wrap">
-                {sections.general}
-              </p>
+              <div className="text-sm text-[#6B7280] leading-relaxed">
+                {formatText(sections.general)}
+              </div>
             )}
 
             {sections.whyItMatters && (
-              <div>
-                <p className="text-xs font-medium text-[#111827] mb-1">
-                  Why it matters
+              <div className="bg-blue-50/50 p-3 rounded-md border border-blue-100">
+                <p className="text-xs font-semibold text-blue-900 mb-1 uppercase tracking-wider">
+                  Why It Matters
                 </p>
-                <p className="text-sm text-[#6B7280] leading-relaxed">
-                  {sections.whyItMatters}
-                </p>
+                <div className="text-sm text-blue-800/90 leading-relaxed">
+                  {formatText(sections.whyItMatters)}
+                </div>
               </div>
             )}
 
             {sections.interviewAngle && (
-              <div>
-                <p className="text-xs font-medium text-[#111827] mb-1">
-                  Interview angle
+              <div className="bg-purple-50/50 p-3 rounded-md border border-purple-100">
+                <p className="text-xs font-semibold text-purple-900 mb-1 uppercase tracking-wider">
+                  Interview Perspective
                 </p>
-                <p className="text-sm text-[#6B7280] leading-relaxed">
-                  {sections.interviewAngle}
-                </p>
+                <div className="text-sm text-purple-800/90 leading-relaxed">
+                  {formatText(sections.interviewAngle)}
+                </div>
               </div>
             )}
 
             {sections.productionAngle && (
-              <div>
-                <p className="text-xs font-medium text-[#111827] mb-1">
-                  Production angle
+              <div className="bg-amber-50/50 p-3 rounded-md border border-amber-100">
+                <p className="text-xs font-semibold text-amber-900 mb-1 uppercase tracking-wider">
+                  Production Reality
                 </p>
-                <p className="text-sm text-[#6B7280] leading-relaxed">
-                  {sections.productionAngle}
-                </p>
+                <div className="text-sm text-amber-800/90 leading-relaxed">
+                  {formatText(sections.productionAngle)}
+                </div>
               </div>
             )}
           </div>
