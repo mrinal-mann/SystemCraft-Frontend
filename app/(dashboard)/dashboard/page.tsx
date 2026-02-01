@@ -2,28 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import {
-  Plus,
-  LayoutGrid,
-  Clock,
-  ChevronRight,
-  Search,
-  Loader2,
-  Target,
-  Sparkles,
-  LogOut,
-  Layers,
-} from "lucide-react";
+import { Plus, Search, Loader2, FolderOpen, ArrowRight } from "lucide-react";
 import { projectService, Project } from "@/services/projectService";
-import { useAuth } from "@/context/AuthContext";
-import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const { user, logout } = useAuth();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -39,277 +24,148 @@ export default function DashboardPage() {
     fetchProjects();
   }, []);
 
-  const filteredProjects = projects.filter(
-    (project) =>
-      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredProjects = projects.filter((project) => {
+    const query = searchQuery.toLowerCase();
+    const titleMatch = project.title?.toLowerCase().includes(query) ?? false;
+    const descriptionMatch =
+      project.description?.toLowerCase().includes(query) ?? false;
+    return titleMatch || descriptionMatch;
+  });
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Loading your projects...
-          </p>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-5 h-5 text-indigo-500 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen">
-      {/* Background Effects */}
-      <div className="pointer-events-none fixed inset-0 grid-glow opacity-50" />
-      <div className="pointer-events-none fixed inset-0 noise opacity-40" />
+    <div className="max-w-6xl mx-auto px-8 pt-16 pb-24">
+      {/* Header Row - Title + New Project Button */}
+      <div className="flex items-center justify-between mb-10">
+        <div>
+          <h1 className="text-2xl font-black text-gray-100 italic tracking-tight underline decoration-indigo-500/30 underline-offset-8">
+            Projects
+          </h1>
+          <p className="text-sm text-gray-500 mt-3 font-medium">
+            Manage and analyze your system designs
+          </p>
+        </div>
+        <Link
+          href="/dashboard/new"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-500 text-white text-sm font-bold rounded-xl hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-500/10 active:scale-95"
+        >
+          <Plus className="w-4 h-4" />
+          New Project
+        </Link>
+      </div>
 
-      {/* Navbar */}
-      <div className="sticky top-0 z-50 border-b bg-background/70 backdrop-blur">
-        <div className="container-tight flex h-14 items-center justify-between">
-          <Link
-            href="/"
-            className="group inline-flex items-center gap-2"
-            data-testid="link-home"
-          >
-            <span className="relative grid h-8 w-8 place-items-center rounded-xl bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <span className="text-sm font-semibold tracking-tight">
-              IdeaLLD
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-4">
-            {user && (
-              <span className="hidden sm:block text-sm text-slate-600 dark:text-slate-400">
-                Hello,{" "}
-                <span className="font-semibold text-slate-900 dark:text-white">
-                  {user.full_name?.split(" ")[0] || "User"}
-                </span>
-              </span>
-            )}
-            <button
-              onClick={logout}
-              className="inline-flex items-center gap-2 rounded-full border bg-white/60 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm backdrop-blur transition hover:bg-white/85 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
-          </div>
+      {/* Search - Full Width */}
+      <div className="mb-12">
+        <div className="relative w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search projects..."
+            className="w-full pl-12 pr-4 py-4 bg-slate-800/50 border border-slate-700/50 rounded-2xl text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/50 transition-all shadow-inner"
+          />
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="container-tight relative z-10 py-10">
-        {/* Header Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10"
-        >
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-950 dark:text-white">
-              Your Projects
-            </h1>
-            <p className="text-slate-600 mt-2 dark:text-slate-300">
-              Manage and analyze your system designs
-            </p>
+      {/* Projects List */}
+      {filteredProjects.length === 0 ? (
+        <div className="bg-slate-800/30 rounded-[32px] border border-white/5 p-20 text-center">
+          <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-white/5 shadow-2xl">
+            <FolderOpen className="w-10 h-10 text-slate-600" />
           </div>
+          <p className="text-lg font-bold text-gray-200 mb-3">
+            {searchQuery ? "No matching projects" : "No projects yet"}
+          </p>
+          <p className="text-sm text-gray-500 mb-10 max-w-xs mx-auto font-medium leading-relaxed">
+            {searchQuery
+              ? "Try adjusting your search query to find what you're looking for."
+              : "Kickstart your design journey by creating your first system design project."}
+          </p>
+          {!searchQuery && (
+            <Link
+              href="/dashboard/new"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-slate-800 text-gray-300 text-sm font-bold rounded-xl border border-white/5 hover:bg-slate-700 transition-all shadow-xl"
+            >
+              <Plus className="w-4 h-4" />
+              Create your first project
+            </Link>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-8 justify-center lg:justify-start">
+          {filteredProjects.map((project) => (
+            <Link
+              key={project.id}
+              href={`/projects/${project.id}`}
+              className="group bg-[#0F172A] border border-white/5 rounded-[32px] p-8 hover:border-indigo-500/30 transition-all duration-500 w-full max-w-[520px] relative overflow-hidden flex flex-col shadow-2xl hover:shadow-indigo-500/5"
+            >
+              {/* Subtle hover background glow */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-indigo-500/10 transition-all" />
 
-          <Link
-            href="/dashboard/new"
-            className="shine-border inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:shadow-float active:scale-[0.99] dark:bg-white dark:text-slate-900"
-          >
-            <Plus className="w-4 h-4" />
-            New Project
-          </Link>
-        </motion.div>
+              <div className="flex flex-col h-full relative z-10">
+                <div className="flex items-start justify-between mb-8">
+                  <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-indigo-500/30 group-hover:bg-indigo-500/5 transition-all duration-500">
+                    <FolderOpen className="w-6 h-6 text-indigo-400" />
+                  </div>
+                  <span
+                    className={`inline-flex px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border ${
+                      project.status === "ANALYZED"
+                        ? "bg-green-500/10 text-green-400 border-green-500/20 shadow-[0_0_12px_rgba(34,197,94,0.1)]"
+                        : project.status === "IN_PROGRESS"
+                          ? "bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_12px_rgba(245,158,11,0.1)]"
+                          : "bg-slate-800/50 text-gray-500 border-white/5"
+                    }`}
+                  >
+                    {project.status === "ANALYZED"
+                      ? "Analyzed"
+                      : project.status === "IN_PROGRESS"
+                        ? "In Progress"
+                        : "Draft"}
+                  </span>
+                </div>
 
-        {/* Stats Row */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10"
-        >
-          <div className="rounded-2xl border bg-white/80 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-                <LayoutGrid className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-slate-950 dark:text-white">
-                  {projects.length}
+                <h3 className="text-xl font-bold text-gray-100 group-hover:text-white transition-colors mb-3 tracking-tight">
+                  {project.title}
+                </h3>
+                <p className="text-sm text-gray-500 line-clamp-3 mb-8 flex-1 font-medium leading-relaxed group-hover:text-gray-400 transition-colors">
+                  {project.description}
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Total Projects
-                </p>
-              </div>
-            </div>
-          </div>
 
-          <div className="rounded-2xl border bg-white/80 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
-                <Target className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-slate-950 dark:text-white">
-                  {projects.filter((p) => p.status === "ANALYZED").length}
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Analyzed
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border bg-white/80 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/10 text-amber-500">
-                <Clock className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-slate-950 dark:text-white">
-                  {projects.filter((p) => p.status === "DRAFT").length}
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  In Progress
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border bg-white/80 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-500">
-                <Layers className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-slate-950 dark:text-white">
-                  {projects.reduce(
-                    (acc, p) => acc + (p.suggestions?.length || 0),
-                    0,
-                  )}
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Total Insights
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Search Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-8"
-        >
-          <div className="relative max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search projects..."
-              className="w-full bg-white/60 border border-slate-200 rounded-full py-3 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-slate-500"
-            />
-          </div>
-        </motion.div>
-
-        {/* Projects Grid */}
-        {filteredProjects.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="rounded-3xl border border-dashed border-slate-300 bg-white/50 p-16 text-center backdrop-blur dark:border-white/10 dark:bg-white/5"
-          >
-            <LayoutGrid className="w-14 h-14 text-slate-300 mx-auto mb-6 dark:text-slate-600" />
-            <h3 className="text-xl font-bold text-slate-950 mb-3 dark:text-white">
-              {searchQuery ? "No projects found" : "No projects yet"}
-            </h3>
-            <p className="text-slate-500 text-sm mb-8 max-w-md mx-auto dark:text-slate-400">
-              {searchQuery
-                ? "Try adjusting your search query"
-                : "Start by creating your first system design project and let AI help you refine it."}
-            </p>
-            {!searchQuery && (
-              <Link
-                href="/dashboard/new"
-                className="shine-border inline-flex items-center gap-2 rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white shadow-lg transition hover:shadow-float active:scale-[0.99] dark:bg-white dark:text-slate-900"
-              >
-                <Plus className="w-4 h-4" />
-                Create your first project
-              </Link>
-            )}
-          </motion.div>
-        ) : (
-          <div className="grid gap-4">
-            {filteredProjects.map((project, idx) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + idx * 0.05 }}
-              >
-                <Link href={`/projects/${project.id}`}>
-                  <div className="group rounded-2xl border bg-white/80 p-5 shadow-sm backdrop-blur transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 hover:border-primary/30 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={cn(
-                            "grid h-12 w-12 place-items-center rounded-2xl",
-                            project.status === "ANALYZED"
-                              ? "bg-primary/10 text-primary"
-                              : "bg-amber-500/10 text-amber-500",
-                          )}
-                        >
-                          {project.status === "ANALYZED" ? (
-                            <Target className="w-6 h-6" />
-                          ) : (
-                            <Clock className="w-6 h-6" />
-                          )}
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-slate-950 group-hover:text-primary transition-colors dark:text-white">
-                            {project.title}
-                          </h3>
-                          <p className="text-sm text-slate-500 line-clamp-1 dark:text-slate-400">
-                            {project.description}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-6">
-                        <div className="hidden sm:flex flex-col items-end">
-                          <span
-                            className={cn(
-                              "text-[10px] uppercase tracking-widest font-bold px-2.5 py-1 rounded-full mb-1",
-                              project.status === "ANALYZED"
-                                ? "bg-primary/10 text-primary"
-                                : "bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-400",
-                            )}
-                          >
-                            {project.status}
-                          </span>
-                          <span className="text-xs text-slate-400 font-mono dark:text-slate-500">
-                            {new Date(project.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:translate-x-1 group-hover:text-primary transition-all dark:text-slate-600" />
-                      </div>
+                <div className="pt-6 border-t border-white/5 flex items-center justify-between">
+                  <div className="flex flex-col gap-2.5 flex-1 max-w-[160px]">
+                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-gray-600">
+                      <span>Maturity</span>
+                      <span className="text-gray-400">
+                        {project.maturity_score || 0}/5
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/5">
+                      <div
+                        className="h-full bg-green-500 rounded-full shadow-[0_0_12px_rgba(34,197,94,0.5)] transition-all duration-1000"
+                        style={{
+                          width: `${((project.maturity_score || 0) / 5) * 100}%`,
+                        }}
+                      />
                     </div>
                   </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
+
+                  <div className="ml-4 w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-4 group-hover:translate-x-0 border border-indigo-500/20">
+                    <ArrowRight className="w-5 h-5 text-indigo-400" />
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

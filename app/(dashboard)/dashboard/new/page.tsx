@@ -2,16 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import {
-  LayoutGrid,
-  FileText,
-  ChevronLeft,
-  Loader2,
-  Sparkles,
-  ArrowRight,
-} from "lucide-react";
 import Link from "next/link";
+import { ArrowLeft, Loader2, BookOpen, Layers, Sparkles } from "lucide-react";
 import { projectService } from "@/services/projectService";
 
 export default function NewProjectPage() {
@@ -29,176 +21,136 @@ export default function NewProjectPage() {
     try {
       const project = await projectService.create(formData);
       router.push(`/projects/${project.id}`);
-    } catch (error) {
-      console.error("Failed to create project", error);
+    } catch (err) {
+      console.error("Failed to create project", err);
+    } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen">
-      {/* Background Effects */}
-      <div className="pointer-events-none fixed inset-0 grid-glow opacity-50" />
-      <div className="pointer-events-none fixed inset-0 noise opacity-40" />
-
-      {/* Navbar */}
-      <div className="sticky top-0 z-50 border-b bg-background/70 backdrop-blur">
-        <div className="container-tight flex h-14 items-center justify-between">
-          <Link
-            href="/"
-            className="group inline-flex items-center gap-2"
-            data-testid="link-home"
-          >
-            <span className="relative grid h-8 w-8 place-items-center rounded-xl bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <span className="text-sm font-semibold tracking-tight">
-              IdeaLLD
-            </span>
-          </Link>
+    <div className="max-w-4xl mx-auto px-6 py-12">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-10">
+        <Link
+          href="/dashboard"
+          className="p-2 text-gray-400 hover:text-gray-200 hover:bg-slate-800 rounded-xl transition-all border border-transparent hover:border-slate-700"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
+        <div>
+          <h1 className="text-2xl font-black text-gray-100 italic tracking-tight underline decoration-indigo-500/30 underline-offset-4">
+            SystemCraft
+          </h1>
+          <p className="text-sm text-gray-500 font-medium">
+            Define your software architecture
+          </p>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="container-tight relative z-10 py-10">
-        {/* Back Link */}
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-colors mb-8 group dark:text-slate-400 dark:hover:text-white"
-        >
-          <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Back to Dashboard
-        </Link>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-2xl"
-        >
-          {/* Header */}
-          <div className="mb-10">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary mb-6">
-              <Sparkles className="h-3.5 w-3.5" />
-              New Project
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-950 mb-3 dark:text-white">
-              Initialize New Design
-            </h1>
-            <p className="text-slate-600 text-lg dark:text-slate-300">
-              Describe your system architecture to start receiving AI-powered
-              feedback.
-            </p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="shine-border rounded-3xl border border-white/10 bg-white/80 p-8 shadow-xl backdrop-blur dark:bg-white/5">
+      {/* Form */}
+      <div className="bg-slate-800 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden">
+        <form onSubmit={handleSubmit}>
+          <div className="p-10 space-y-8">
+            <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-6">
-                {/* Title Field */}
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Project Title
-                    </label>
-                    <span
-                      className={`text-xs font-mono ${
-                        formData.title.length >= 250
-                          ? "text-red-500"
-                          : "text-slate-400 dark:text-slate-500"
-                      }`}
-                    >
-                      {formData.title.length}/255
-                    </span>
-                  </div>
-                  <div className="relative">
-                    <LayoutGrid className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3 ml-1">
+                    What are you building?
+                  </label>
+                  <div className="relative group">
+                    <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-indigo-400 transition-colors" />
                     <input
+                      type="text"
                       required
-                      maxLength={255}
                       value={formData.title}
                       onChange={(e) =>
                         setFormData({ ...formData, title: e.target.value })
                       }
-                      className="w-full bg-white/60 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-slate-500"
-                      placeholder="e.g., URL Shortener Service"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium"
+                      placeholder="e.g., Global Payment System"
                     />
                   </div>
                 </div>
 
-                {/* Description Field */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">
-                    Core Objective
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3 ml-1">
+                    Brief Catchphrase
                   </label>
-                  <textarea
-                    required
-                    rows={2}
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    className="w-full bg-white/60 border border-slate-200 rounded-xl py-3 px-4 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all resize-none text-sm dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-slate-500"
-                    placeholder="What is the high-level goal of this system?"
-                  />
-                </div>
-
-                {/* Design Content Field */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">
-                    Detailed System Architecture (LLD)
-                  </label>
-                  <div className="relative">
-                    <FileText className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
-                    <textarea
-                      rows={10}
-                      value={formData.design_content}
+                  <div className="relative group">
+                    <Layers className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-indigo-400 transition-colors" />
+                    <input
+                      type="text"
+                      required
+                      value={formData.description}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          design_content: e.target.value,
+                          description: e.target.value,
                         })
                       }
-                      className="w-full bg-white/60 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all resize-none font-mono text-sm leading-relaxed dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-slate-500"
-                      placeholder={`Paste your full design here...
-
-Example:
-• Database: PostgreSQL with sharding strategy
-• Cache: Redis LRU for hot URLs
-• Message Queue: Kafka for async processing
-• API Gateway: Rate limiting with token bucket
-• Scaling: Kubernetes HPA with Load Balancer`}
+                      className="w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium"
+                      placeholder="Scalable microservices for fiat/crypto"
                     />
                   </div>
                 </div>
               </div>
+
+              <div className="bg-slate-900/50 border border-slate-700/50 rounded-2xl p-6 flex flex-col justify-center">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-indigo-500/10 rounded-lg flex items-center justify-center border border-indigo-500/20">
+                    <Sparkles className="w-4 h-4 text-indigo-400" />
+                  </div>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-gray-300">
+                    Design Tip
+                  </h3>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed font-medium">
+                  Be as descriptive as possible in your initial design. Mention
+                  technologies like
+                  <span className="text-gray-400 px-1 font-bold">
+                    Redis, Kafka, or PostgreSQL
+                  </span>
+                  to help the AI provide more specific production pitfalls.
+                </p>
+              </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="shine-border flex-1 bg-slate-900 hover:shadow-float text-white font-semibold py-4 rounded-full transition-all flex items-center justify-center gap-2 group shadow-lg active:scale-[0.99] dark:bg-white dark:text-slate-900"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    Launch Design Mentor
-                    <ArrowRight className="w-4 h-4 transition group-hover:translate-x-0.5" />
-                  </>
-                )}
-              </button>
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center justify-center px-8 py-4 rounded-full border bg-white/60 text-slate-700 font-medium shadow-sm backdrop-blur transition hover:bg-white/85 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10 dark:border-white/10"
-              >
-                Cancel
-              </Link>
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3 ml-1">
+                Initial Architecture (Optional Markdown)
+              </label>
+              <textarea
+                value={formData.design_content}
+                onChange={(e) =>
+                  setFormData({ ...formData, design_content: e.target.value })
+                }
+                rows={10}
+                className="w-full px-5 py-4 text-sm font-mono bg-slate-900 border border-slate-700 rounded-2xl text-gray-300 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all resize-none shadow-inner"
+                placeholder="Describe components, classes, and logic flows..."
+              />
             </div>
-          </form>
-        </motion.div>
+          </div>
+
+          <div className="px-10 py-6 bg-slate-900/50 border-t border-slate-700 flex items-center justify-end gap-4">
+            <Link
+              href="/dashboard"
+              className="px-6 py-2.5 text-xs font-black uppercase tracking-widest text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Cancel
+            </Link>
+            <button
+              type="submit"
+              disabled={
+                isSubmitting || !formData.title || !formData.description
+              }
+              className="inline-flex items-center gap-2 px-8 py-3 text-xs font-black uppercase tracking-widest text-white bg-indigo-50 rounded-xl bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-500/10"
+            >
+              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              Initialize Project
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

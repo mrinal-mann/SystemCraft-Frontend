@@ -1,359 +1,142 @@
 "use client";
 
-import { useEffect } from "react";
-import { motion, useMotionValue, useSpring } from "framer-motion";
-import {
-  ArrowRight,
-  BookOpen,
-  ChevronRight,
-  CornerDownLeft,
-  Layers,
-  Sparkles,
-  Wand2,
-} from "lucide-react";
 import Link from "next/link";
 
-function useRevealOnScroll() {
-  useEffect(() => {
-    const els = Array.from(
-      document.querySelectorAll<HTMLElement>("[data-reveal]"),
-    );
-
-    if (els.length === 0) return;
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            (e.target as HTMLElement).dataset.revealed = "true";
-            io.unobserve(e.target);
-          }
-        }
-      },
-      { threshold: 0.15, rootMargin: "-10% 0px -10% 0px" },
-    );
-
-    for (const el of els) io.observe(el);
-
-    return () => io.disconnect();
-  }, []);
-}
-
-function Pill({ children }: { children: React.ReactNode }) {
-  return (
-    <span
-      className="inline-flex items-center gap-2 rounded-full border bg-white/70 px-3 py-1 text-[12px] font-medium text-slate-700 shadow-sm backdrop-blur dark:bg-white/5 dark:text-slate-200"
-      data-testid="badge-pill"
-    >
-      {children}
-    </span>
-  );
-}
+import { Logo } from "@/components/ui/Logo";
 
 function Nav() {
   return (
-    <div className="sticky top-0 z-50 border-b bg-background/70 backdrop-blur">
-      <div className="container-tight flex h-14 items-center justify-between">
+    <nav className="max-w-5xl mx-auto px-6 h-24 flex items-center justify-between relative z-10">
+      <Link href="/">
+        <Logo size={24} />
+      </Link>
+      <div className="flex items-center gap-8">
         <Link
-          href="/"
-          className="group inline-flex items-center gap-2"
-          data-testid="link-home"
+          href="/login"
+          className="text-[13px] font-semibold text-slate-400 hover:text-white transition-colors"
         >
-          <span className="relative grid h-8 w-8 place-items-center rounded-xl bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900">
-            <Sparkles className="h-4 w-4" />
-          </span>
-          <span className="text-sm font-semibold tracking-tight">IdeaLLD</span>
+          Log in
         </Link>
-
-        <div className="hidden items-center gap-2 md:flex">
-          <a
-            href="#how"
-            className="rounded-full px-3 py-2 text-sm text-slate-600 transition hover:bg-black/5 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white"
-            data-testid="link-how"
-          >
-            How it works
-          </a>
-
-        </div>
-
         <Link
           href="/signup"
-          className="shine-border group inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-float active:scale-[0.99] dark:bg-white dark:text-slate-900"
-          data-testid="button-cta-nav"
+          className="px-4 py-2 bg-indigo-500 text-white text-[13px] font-bold rounded-lg hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-500/10"
         >
-          Try it free
-          <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+          Get Started
         </Link>
       </div>
-    </div>
+    </nav>
   );
 }
 
 function Hero() {
   return (
-    <section
-      id="top"
-      className="relative overflow-hidden pt-12 pb-16 md:pt-20 md:pb-28"
-    >
-      <div className="pointer-events-none absolute inset-0 grid-glow" />
-      <div className="pointer-events-none absolute inset-0 noise opacity-60" />
+    <section className="py-40 px-6 relative">
+      {/* Radial Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none -z-0" />
 
-      <div className="container-tight relative w-full">
-        <div
-          className="reveal"
-          data-reveal
-          style={{
-            // @ts-expect-error CSS custom property
-            "--delay": "0ms",
-          }}
-        >
-          <Pill>
-            <span className="inline-flex items-center gap-2">
-              <Wand2 className="h-3.5 w-3.5" />
-              Beta Launch
-            </span>
-          </Pill>
-        </div>
+      <div className="max-w-5xl mx-auto text-center relative z-10">
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.05] tracking-tight mb-10 max-w-4xl mx-auto">
+          Master <span className="text-slate-500">System Design</span> Thinking.{" "}
+          <br />
+          Let AI <span className="text-slate-500">guide</span> the structure.
+        </h1>
 
-        <div
-          className="mt-10 grid items-center gap-12 md:mt-16 lg:grid-cols-2"
-          data-testid="section-hero"
-        >
-          <div className="max-w-2xl">
-            <h1
-              className="reveal text-balance text-4xl font-bold tracking-tight text-slate-950 md:text-6xl lg:text-7xl dark:text-white"
-              data-reveal
-              style={{
-                // @ts-expect-error CSS custom property
-                "--delay": "80ms",
-              }}
-              data-testid="text-hero-title"
-            >
-              Master Low-Level Design with{" "}
-              <span className="text-primary">AI Precision</span>.
-            </h1>
-            <p
-              className="reveal mt-6 text-pretty text-lg leading-relaxed text-slate-600 md:text-xl dark:text-slate-300"
-              data-reveal
-              style={{
-                // @ts-expect-error CSS custom property
-                "--delay": "140ms",
-              }}
-              data-testid="text-hero-subtitle"
-            >
-              The first AI-powered mentor specifically designed for Low-Level
-              Design. Identify bottlenecks, handle edge cases, and learn
-              production-grade patterns.
-            </p>
+        <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto font-medium leading-relaxed mb-12">
+          SystemCraft analyzes your design, remembers your decisions, and tells
+          you exactly what to improve next.
+        </p>
 
-            <div
-              className="reveal mt-10 flex flex-wrap items-center gap-4"
-              data-reveal
-              style={{
-                // @ts-expect-error CSS custom property
-                "--delay": "220ms",
-              }}
-            >
-              <Link
-                href="/signup"
-                className="shine-border inline-flex items-center gap-2 rounded-full bg-slate-900 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:shadow-float active:scale-[0.99] dark:bg-white dark:text-slate-900"
-                data-testid="button-cta-primary"
-              >
-                Start Building Free
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-              <a
-                href="#how"
-                className="inline-flex items-center gap-2 rounded-full border bg-white/60 px-8 py-4 text-base font-semibold text-slate-800 shadow-sm backdrop-blur transition hover:bg-white/85 dark:bg-white/5 dark:text-slate-100 dark:hover:bg-white/10"
-                data-testid="link-secondary"
-              >
-                See the Workflow
-                <CornerDownLeft className="h-5 w-5" />
-              </a>
-            </div>
-          </div>
-
-          <div
-            className="reveal relative hidden lg:block"
-            data-reveal
-            style={{
-              // @ts-expect-error CSS custom property
-              "--delay": "300ms",
-            }}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+          <Link
+            href="/signup"
+            className="px-10 py-4 bg-indigo-500 text-white text-sm font-bold rounded-2xl hover:bg-indigo-600 transition-all shadow-xl shadow-indigo-500/20 active:scale-95"
           >
-            <div className="shine-border relative rounded-3xl bg-slate-900/5 p-6 transition-transform hover:scale-[1.01] dark:bg-white/5">
-              <div className="relative rounded-2xl border border-white/10 bg-slate-950 shadow-2xl overflow-hidden">
-                <div className="flex h-10 items-center gap-2 border-b border-white/5 bg-white/5 px-4">
-                  <div className="h-2.5 w-2.5 rounded-full bg-red-500/60" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/60" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-green-500/60" />
-                  <span className="ml-auto text-[10px] uppercase tracking-widest text-slate-500">
-                    Analysis Engine
-                  </span>
-                </div>
-                <div className="p-6 font-mono text-sm text-slate-400">
-                  <div>
-                    <span className="text-emerald-400">class</span>{" "}
-                    <span className="text-blue-400">PaymentGateway</span>{" "}
-                    {"{"}{" "}
-                  </div>
-                  <div className="ml-4 mt-2 text-slate-500">
-                    {"// Decision: Stripe SDK"}
-                  </div>
-                  <div className="ml-4">
-                    <span className="text-emerald-400">private</span>{" "}
-                    retryPolicy:{" "}
-                    <span className="text-yellow-400">Exponential</span>;
-                  </div>
-                  <div className="mt-2">{"}"} </div>
-
-                  <div className="mt-6 rounded-xl bg-primary/10 p-4 border border-primary/30">
-                    <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider">
-                      <Sparkles className="h-4 w-4" />
-                      Mentor Feedback
-                    </div>
-                    <div className="mt-3 text-slate-200 text-sm leading-relaxed">
-                      Missing circuit breaker for external API calls. Add
-                      fallback for payment processing timeout.
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-16 md:mt-24" data-testid="divider-hero">
-          <div className="hairline h-px w-full" />
+            Start Building Free
+          </Link>
+          <a
+            href="#how"
+            className="px-10 py-4 bg-transparent text-slate-300 text-sm font-bold rounded-2xl border border-slate-800 hover:bg-slate-800 transition-all"
+          >
+            See How It Works
+          </a>
         </div>
       </div>
     </section>
   );
 }
 
-function Step({
-  icon,
+function WorkflowStep({
+  number,
   title,
   desc,
-  index,
+  isLeft,
 }: {
-  icon: React.ReactNode;
+  number: string;
   title: string;
   desc: string;
-  index: number;
+  isLeft: boolean;
 }) {
-  const stepNumber = String(index + 1).padStart(2, "0");
   return (
     <div
-      className="reveal reveal-stagger group relative rounded-3xl border bg-white/80 p-8 shadow-sm backdrop-blur transition-all duration-300 hover:shadow-xl hover:-translate-y-1 dark:border-white/10 dark:bg-white/5"
-      data-reveal
-      style={{
-        // @ts-expect-error CSS custom property
-        "--delay": `${index * 100}ms`,
-      }}
-      data-testid={`card-step-${index}`}
+      className={`relative flex items-center justify-between w-full mt-24 ${isLeft ? "flex-row" : "flex-row-reverse"}`}
     >
-      <div className="absolute -top-4 -left-2 text-6xl font-black text-slate-100 dark:text-slate-800 select-none">
-        {stepNumber}
+      {/* Card */}
+      <div
+        className={`w-[420px] p-8 bg-[#0F172A] border border-white/10 rounded-xl relative z-10 transition-all hover:border-indigo-500/30 group`}
+      >
+        <span className="text-indigo-400 text-sm font-semibold uppercase tracking-widest block mb-3 group-hover:translate-x-1 transition-transform">
+          {number}
+        </span>
+        <h3 className="text-white text-xl font-semibold mb-2">{title}</h3>
+        <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
       </div>
-      <div className="relative">
-        <div
-          className="mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-slate-900 text-white shadow-lg dark:bg-white dark:text-slate-900"
-          data-testid={`icon-step-${index}`}
-        >
-          {icon}
-        </div>
-        <div
-          className="text-xl font-bold text-slate-950 dark:text-white"
-          data-testid={`text-step-title-${index}`}
-        >
-          {title}
-        </div>
-        <div
-          className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
-          data-testid={`text-step-desc-${index}`}
-        >
-          {desc}
-        </div>
-      </div>
+
+      {/* Dot */}
+      <div className="absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-indigo-500 border-4 border-[#0B1220] z-20" />
+
+      {/* Empty Spacer for the other side */}
+      <div className="w-[420px]" />
     </div>
   );
 }
 
 function HowItWorks() {
   return (
-    <section id="how" className="bg-slate-50/50 dark:bg-slate-900/30">
-      <div className="container-tight w-full py-24 md:py-32">
-        <div
-          className="reveal text-center"
-          data-reveal
-          data-testid="section-how"
-        >
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
-            <Layers className="h-3.5 w-3.5" />
-            Analysis Engine
-          </div>
-          <h2
-            className="mt-8 text-balance text-4xl font-bold tracking-tight text-slate-950 md:text-5xl dark:text-white"
-            data-testid="text-how-title"
-          >
-            A Workflow Built for Engineers.
-          </h2>
-          <p
-            className="mt-6 mx-auto max-w-2xl text-pretty text-lg leading-relaxed text-slate-600 dark:text-slate-300"
-            data-testid="text-how-subtitle"
-          >
-            Our backend runs rule-based static analysis combined with
-            LLM-powered context awareness to push your design to production
-            readiness.
-          </p>
-        </div>
+    <section
+      id="how"
+      className="py-40 px-6 border-t border-white/5 relative bg-[#0B1220] grid-lines"
+    >
+      <div className="max-w-4xl mx-auto text-center relative z-10 mb-32">
+        <h2 className="text-3xl md:text-5xl font-black text-white mb-6">
+          How SystemCraft Works
+        </h2>
+        <p className="text-slate-500 font-medium text-lg">
+          From rough design to production-grade thinking.
+        </p>
+      </div>
 
-        <div
-          className="mt-20 flex flex-col items-center gap-6 lg:flex-row lg:items-stretch lg:justify-between"
-          data-testid="grid-steps"
-        >
-          <Step
-            icon={<BookOpen className="h-6 w-6" />}
-            title="Define"
-            desc="Outline your classes, attributes, and methods. Mention your technology choices like Redis or Kafka."
-            index={0}
+      <div className="max-w-5xl mx-auto relative px-4">
+        {/* Vertical Center Line */}
+        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/10 -translate-x-1/2" />
+
+        <div className="flex flex-col relative">
+          <WorkflowStep
+            number="01"
+            title="Describe your system design"
+            desc="Input your classes, relationships, and technical requirements in clear text. Our interface supports markdown for rich structural details."
+            isLeft={true}
           />
-
-          {/* Arrow Connector */}
-          <div className="hidden lg:flex items-center justify-center text-slate-300 dark:text-slate-600">
-            <ChevronRight className="h-8 w-8" />
-          </div>
-
-          <Step
-            icon={<Layers className="h-6 w-6" />}
-            title="Scan"
-            desc="Our system analyzes your design against patterns for caching, scalability, and security."
-            index={1}
+          <WorkflowStep
+            number="02"
+            title="SystemCraft analyzes gaps using rules + AI"
+            desc="Our engine scans for architectural smells, scalability bottlenecks, and missing components using advanced LLD patterns."
+            isLeft={false}
           />
-
-          {/* Arrow Connector */}
-          <div className="hidden lg:flex items-center justify-center text-slate-300 dark:text-slate-600">
-            <ChevronRight className="h-8 w-8" />
-          </div>
-
-          <Step
-            icon={<Sparkles className="h-6 w-6" />}
-            title="Augment"
-            desc="AI provides 'Interview Perspective' and 'Production Reality' insights to enrich your design."
-            index={2}
-          />
-
-          {/* Arrow Connector */}
-          <div className="hidden lg:flex items-center justify-center text-slate-300 dark:text-slate-600">
-            <ChevronRight className="h-8 w-8" />
-          </div>
-
-          <Step
-            icon={<Wand2 className="h-6 w-6" />}
-            title="Iterate"
-            desc="Refine your LLD based on feedback and re-scan until it's interview-ready."
-            index={3}
+          <WorkflowStep
+            number="03"
+            title="Get guided suggestions and iterate"
+            desc="Follow step-by-step guidance to refine your architecture until it reaches production maturity and catches edge cases."
+            isLeft={true}
           />
         </div>
       </div>
@@ -361,50 +144,28 @@ function HowItWorks() {
   );
 }
 
-function CursorGlow() {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const sx = useSpring(x, { stiffness: 120, damping: 30, mass: 0.35 });
-  const sy = useSpring(y, { stiffness: 120, damping: 30, mass: 0.35 });
-
-  useEffect(() => {
-    const move = (e: MouseEvent) => {
-      x.set(e.clientX);
-      y.set(e.clientY);
-    };
-
-    window.addEventListener("mousemove", move);
-    return () => window.removeEventListener("mousemove", move);
-  }, [x, y]);
-
+function Footer() {
   return (
-    <motion.div
-      className="pointer-events-none fixed inset-0 z-0 opacity-80"
-      style={
-        {
-          background:
-            "radial-gradient(600px 420px at var(--x) var(--y), rgba(59, 130, 246, 0.10), transparent 55%)",
-          "--x": sx,
-          "--y": sy,
-        } as React.CSSProperties
-      }
-      aria-hidden
-      data-testid="bg-cursor-glow"
-    />
+    <footer className="py-16 border-t border-white/5">
+      <div className="max-w-5xl mx-auto px-6 text-center">
+        <p className="text-[11px] font-bold text-slate-600 uppercase tracking-widest leading-loose">
+          Built for engineers learning system design. <br />
+          SystemCraft &copy; {new Date().getFullYear()}
+        </p>
+      </div>
+    </footer>
   );
 }
 
 export default function Home() {
-  useRevealOnScroll();
-
   return (
-    <div className="relative min-h-screen">
-      <CursorGlow />
+    <div className="min-h-screen bg-[#0B1220] grid-lines selection:bg-indigo-500/30 selection:text-indigo-200">
       <Nav />
-      <main className="relative z-10">
+      <main>
         <Hero />
         <HowItWorks />
       </main>
+      <Footer />
     </div>
   );
 }

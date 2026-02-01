@@ -1,61 +1,46 @@
-import * as React from "react";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?:
-    | "default"
-    | "outline"
-    | "ghost"
-    | "secondary"
-    | "destructive"
-    | "link";
-  size?: "default" | "sm" | "lg" | "icon";
-  asChild?: boolean;
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "ghost";
+  size?: "sm" | "md" | "lg";
+  isLoading?: boolean;
+  children: React.ReactNode;
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      className,
-      variant = "default",
-      size = "default",
-      asChild = false,
-      ...props
-    },
-    ref,
-  ) => {
-    const baseStyles =
-      "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
+export function Button({
+  variant = "primary",
+  size = "md",
+  isLoading = false,
+  children,
+  className,
+  disabled,
+  ...props
+}: ButtonProps) {
+  const baseStyles =
+    "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
 
-    const variants = {
-      default: "bg-primary text-primary-foreground hover:bg-primary/90",
-      destructive:
-        "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-      outline:
-        "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-      secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/90",
-      ghost: "hover:bg-accent hover:text-accent-foreground",
-      link: "text-primary underline-offset-4 hover:underline",
-    };
+  const variants = {
+    primary: "bg-[#4F46E5] text-white hover:bg-[#4338CA] focus:ring-[#4F46E5]",
+    secondary:
+      "bg-white text-[#111827] border border-[#E5E7EB] hover:bg-[#F9FAFB] focus:ring-[#E5E7EB]",
+    ghost: "text-[#6B7280] hover:text-[#111827] hover:bg-[#F9FAFB]",
+  };
 
-    const sizes = {
-      default: "h-10 px-4 py-2",
-      sm: "h-9 rounded-md px-3",
-      lg: "h-11 rounded-md px-8",
-      icon: "h-10 w-10",
-    };
+  const sizes = {
+    sm: "px-3 py-1.5 text-xs",
+    md: "px-4 py-2 text-sm",
+    lg: "px-6 py-3 text-base",
+  };
 
-    const Comp = asChild ? "span" : "button"; // Simplified asChild
-
-    return (
-      <Comp
-        className={cn(baseStyles, variants[variant], sizes[size], className)}
-        ref={ref as any}
-        {...props}
-      />
-    );
-  },
-);
-Button.displayName = "Button";
-
-export { Button };
+  return (
+    <button
+      className={cn(baseStyles, variants[variant], sizes[size], className)}
+      disabled={disabled || isLoading}
+      {...props}
+    >
+      {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+      {children}
+    </button>
+  );
+}

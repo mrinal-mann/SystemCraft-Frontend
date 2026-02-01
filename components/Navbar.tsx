@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Button } from "./ui/button";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -87,24 +86,19 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  asChild
-                  className="hidden sm:flex"
+                <Link
+                  href="/login"
+                  className="hidden sm:flex px-3 py-1.5 text-sm font-medium text-[#6B7280] hover:text-[#111827] transition-colors"
                 >
-                  <Link href="/login">Sign In</Link>
-                </Button>
-                <Button
-                  size="sm"
-                  asChild
-                  className="rounded-full px-6 shadow-lg shadow-brand-primary/20"
+                  Sign In
+                </Link>
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#4F46E5] text-white text-sm font-medium rounded-lg hover:bg-[#4338CA] transition-colors"
                 >
-                  <Link href="/signup">
-                    Start Building Free
-                    <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
+                  Start Building Free
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
             )}
 
